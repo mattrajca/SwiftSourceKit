@@ -11,11 +11,19 @@ public protocol SourceKitDelegate: class {
 }
 
 public final class SourceKit {
-    static public var sharedInstance = SourceKit()
     public weak var delegate: SourceKitDelegate?
+    public static var sandboxAccessBookmark: NSData?
+    public static let sharedInstance: SourceKit = {
+        SourceKit(sandboxAccessBookmark: sandboxAccessBookmark)
+    }()
     
-    private init() {
-        sourcekitd_initialize()
+    private init(sandboxAccessBookmark: NSData?) {
+        if let bookmarkData = sandboxAccessBookmark {
+            sourcekitd_initialize(bookmarkData.bytes, bookmarkData.length)
+        } else {
+            sourcekitd_initialize(nil, 0)
+        }
+
         sourcekitd_set_notification_handler {
             (response) in
             if sourcekitd_response_is_error(response) {
