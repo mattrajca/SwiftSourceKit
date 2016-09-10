@@ -12,14 +12,16 @@ public protocol SourceKitDelegate: class {
 
 public final class SourceKit {
     public weak var delegate: SourceKitDelegate?
-    public static var sandboxAccessBookmark: NSData?
+    public static var sandboxAccessBookmark: Data?
     public static let sharedInstance: SourceKit = {
         SourceKit(sandboxAccessBookmark: sandboxAccessBookmark)
     }()
     
-    private init(sandboxAccessBookmark: NSData?) {
+    private init(sandboxAccessBookmark: Data?) {
         if let bookmarkData = sandboxAccessBookmark {
-            sourcekitd_initialize(bookmarkData.bytes, bookmarkData.length)
+            bookmarkData.withUnsafeBytes { bytes in
+                sourcekitd_initialize(bytes, bookmarkData.count)
+            }
         } else {
             sourcekitd_initialize(nil, 0)
         }
